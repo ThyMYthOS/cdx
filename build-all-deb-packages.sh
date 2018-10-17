@@ -10,57 +10,50 @@
 # exit on error:
 set -e
 
-# generate libcdx0 and libcdx-dev:
+echo "generate libcdx0 and libcdx-dev:"
 
-rm -rf ~/packaging/libcdx
-mkdir -p ~/packaging/libcdx
+rm -rf packaging/libcdx
+mkdir -p packaging/libcdx
 
 # get version from changlog file:
-cd ~/git/cdx/CPP
-LIBCDX_VERSION=$(dpkg-parsechangelog --show-field Version | sed  's/-.*//')
+LIBCDX_VERSION=$(cd CPP && dpkg-parsechangelog --show-field Version | sed  's/-.*//')
 
 echo libcdx-C++ version: $LIBCDX_VERSION
 
-cp -r ~/git/cdx/CPP ~/packaging/libcdx/libcdx_$LIBCDX_VERSION
-cd ~/packaging/libcdx
+cp -r CPP packaging/libcdx/libcdx_$LIBCDX_VERSION
 
-tar cfz libcdx_$LIBCDX_VERSION.orig.tar.gz libcdx_$LIBCDX_VERSION
-cd libcdx_$LIBCDX_VERSION
-DEB_BUILD_OPTIONS="parallel=4" nice debuild -us -uc
+( cd packaging/libcdx && tar cfz libcdx_$LIBCDX_VERSION.orig.tar.gz libcdx_$LIBCDX_VERSION )
+( cd packaging/libcdx/libcdx_$LIBCDX_VERSION && debuild -us -uc )
 
-# Build the package for the Python CDX library, python-cdx_1.1-1_all.deb:
+
+echo "Build the package for the Python CDX library, python-cdx_1.1-1_all.deb:"
 
 # get version:
-cd ~/git/cdx/python
-export PY_CDX_VERSION=$(dpkg-parsechangelog --show-field Version | sed  's/-.*//')
+export PY_CDX_VERSION=$(cd python && dpkg-parsechangelog --show-field Version | sed  's/-.*//')
 
 echo libcdx-Python version: $PY_CDX_VERSION
 
-rm -rf ~/packaging/python-cdx
-mkdir -p ~/packaging/python-cdx
-cp -r ~/git/cdx/python ~/packaging/python-cdx/python-cdx_$PY_CDX_VERSION
-cd ~/packaging/python-cdx
-tar czf python-cdx_$PY_CDX_VERSION.orig.tar.gz python-cdx_$PY_CDX_VERSION
-cd python-cdx_$PY_CDX_VERSION
-debuild -us -uc
+rm -rf packaging/python-cdx
+mkdir -p packaging/python-cdx
+cp -r python packaging/python-cdx/python-cdx_$PY_CDX_VERSION
+( cd packaging/python-cdx && tar czf python-cdx_$PY_CDX_VERSION.orig.tar.gz python-cdx_$PY_CDX_VERSION )
+( cd packaging/python-cdx/python-cdx_$PY_CDX_VERSION && debuild -us -uc )
 
-echo Install the new libcdx packages now, before the package for cdx-tools is build
-read
+echo "Install the new libcdx packages now, before the package for cdx-tools is build"
+( cd packaging && dpkg -i libcdx/*.deb python-cdx/*.deb )
 
-# Build the Debian package for the cdx-tools:
+exit 0
 
-rm -rf ~/packaging/cdx-tools
-mkdir -p ~/packaging/cdx-tools
-cd ~/packaging/cdx-tools
+echo "Build the Debian package for the cdx-tools:"
+
+rm -rf packaging/cdx-tools
+mkdir -p packaging/cdx-tools
 
 # get version:
-cd ~/git/cdx/tools
-CDX_TOOLS_VERSION=$(dpkg-parsechangelog --show-field Version | sed  's/-.*//')
+CDX_TOOLS_VERSION=$(cd tools && dpkg-parsechangelog --show-field Version | sed  's/-.*//')
 
 echo CDX tools version: $CDX_TOOLS_VERSION
 
-cp -r ~/git/cdx/tools ~/packaging/cdx-tools/cdx-tools_$CDX_TOOLS_VERSION
-cd ~/packaging/cdx-tools
-tar cfz cdx-tools_$CDX_TOOLS_VERSION.orig.tar.gz cdx-tools_$CDX_TOOLS_VERSION
-cd cdx-tools_$CDX_TOOLS_VERSION/
-debuild -us -uc
+cp -r tools packaging/cdx-tools/cdx-tools_$CDX_TOOLS_VERSION
+( cd packaging/cdx-tools && tar cfz cdx-tools_$CDX_TOOLS_VERSION.orig.tar.gz cdx-tools_$CDX_TOOLS_VERSION )
+( cd packaging/cdx-tools/cdx-tools_$CDX_TOOLS_VERSION && debuild -us -uc )

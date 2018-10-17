@@ -1,0 +1,11 @@
+sudo: required
+language: generic
+
+services:
+  - docker
+
+script:
+  - cd CPP && sh ../travis_build.sh
+
+if:
+  tag IS blank
